@@ -1,0 +1,168 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "vinay",
+      "email": "hp123@gmail.com",
+      "password": "$2a$10$blSSsMIOPnG8Y6KszsVUNODmEIQeONZhCwv1XMBijT/yXVEHwX3NW",
+      "role": "patient"
+    },
+    {
+      "id": 2,
+      "name": "vinay",
+      "email": "hplaptopv863086@gmail.com",
+      "password": "$2a$10$97TPdvWQlaBtNjIFIJqw/eJsj0X1fkY.sKk8R5PKfsBftBlKcPQ2m",
+      "role": "patient"
+    },
+    {
+      "id": 3,
+      "name": "vinay",
+      "email": "bu@gmail.com",
+      "password": "$2a$10$THi52r.RMljYfQjo139CA.ow2k2EvESDSdOkHDX2NE80zWQ7OBwjW",
+      "role": "patient"
+    },
+    {
+      "id": 4,
+      "name": "Vinay",
+      "email": "vinay@gmail.com",
+      "password": "$2a$10$XxNgLXGBB/NH6lw.9JhoW.n0yxJfHNQnqKBpolHUfrQs7Dvq2wmju",
+      "role": "patient"
+    },
+    {
+      "id": 5,
+      "name": "vinay",
+      "email": "vinaydixit7078@gmail.com",
+      "password": "$2a$10$4lRr8hMLniJMCpIxUheb/OhDumIEsrfiX4Nl6h1oFVONfyQBYlj3G",
+      "role": "patient"
+    }
+  ],
+  "doctors": [],
+  "patients": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "gender": "Male",
+      "address": ""
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "gender": "Male",
+      "address": ""
+    },
+    {
+      "id": 3,
+      "user_id": 3,
+      "gender": "Male",
+      "address": ""
+    },
+    {
+      "id": 4,
+      "user_id": 4,
+      "gender": "Male",
+      "address": ""
+    },
+    {
+      "id": 5,
+      "user_id": 5,
+      "gender": "Male",
+      "address": ""
+    }
+  ],
+  "appointments": [
+    {
+      "id": 1,
+      "patient_id": 2,
+      "doctor_id": 1,
+      "date": "2026-07-16",
+      "time": "11:00",
+      "status": "confirmed",
+      "created_at": "2026-07-28T13:10:15.972Z"
+    },
+    {
+      "id": 2,
+      "patient_id": 1,
+      "doctor_id": 2,
+      "date": "2026-07-30",
+      "time": "09:00",
+      "status": "pending",
+      "created_at": "2026-07-29T13:32:20.335Z"
+    },
+    {
+      "id": 3,
+      "patient_id": 2,
+      "doctor_id": 2,
+      "date": "2026-07-31",
+      "time": "09:00",
+      "status": "confirmed",
+      "created_at": "2026-07-29T16:50:02.880Z"
+    },
+    {
+      "id": 4,
+      "patient_id": 3,
+      "doctor_id": 23,
+      "date": "2026-08-01",
+      "time": "09:00",
+      "status": "pending",
+      "created_at": "2026-07-29T16:59:33.378Z"
+    },
+    {
+      "id": 5,
+      "patient_id": 4,
+      "doctor_id": 23,
+      "date": "2026-07-31",
+      "time": "09:00",
+      "status": "pending",
+      "created_at": "2026-07-29T17:04:42.717Z"
+    },
+    {
+      "id": 6,
+      "patient_id": 4,
+      "doctor_id": 42,
+      "date": "2026-07-31",
+      "time": "09:00",
+      "status": "pending",
+      "created_at": "2026-07-29T17:04:53.914Z"
+    },
+    {
+      "id": 7,
+      "patient_id": 4,
+      "doctor_id": 49,
+      "date": "2026-07-31",
+      "time": "09:00",
+      "status": "pending",
+      "created_at": "2026-07-29T17:09:13.297Z"
+    },
+    {
+      "id": 8,
+      "patient_id": 2,
+      "doctor_id": 23,
+      "date": "2026-08-28",
+      "time": "12:00",
+      "status": "pending",
+      "created_at": "2026-08-04T13:15:16.292Z"
+    }
+  ],
+  "medical_records": [],
+  "prescriptions": [],
+  "payments": [
+    {
+      "id": 1785849292922,
+      "appointment_id": 1,
+      "amount": 1200,
+      "status": "paid",
+      "payment_method": "razorpay",
+      "transaction_id": "mock_1785849292914",
+      "created_at": "2026-08-04T13:14:52.922Z"
+    },
+    {
+      "id": 1785849326729,
+      "appointment_id": 3,
+      "amount": 900,
+      "status": "paid",
+      "payment_method": "razorpay",
+      "transaction_id": "mock_1785849326721",
+      "created_at": "2026-08-04T13:15:26.729Z"
+    }
+  ]
+}
