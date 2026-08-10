@@ -12,6 +12,8 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 
+const connectDB = require('./config/db');
+
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -32,6 +34,15 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/patients', patientRoutes);
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+const startServer = async () => {
+  await connectDB();
+
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+};
+
+startServer().catch((error) => {
+  console.error('Server startup failed:', error);
+  process.exit(1);
 });

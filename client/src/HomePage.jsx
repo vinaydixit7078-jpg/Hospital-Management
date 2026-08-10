@@ -62,12 +62,7 @@ export default function HomePage() {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || 'null') || {};
 
-  const ADMIN_ACCESS_CODE = '7070'; // replace with secure check or env variable
-  const [showAdminModal, setShowAdminModal] = useState(false);
-  const [adminCodeInput, setAdminCodeInput] = useState('');
-  const [adminError, setAdminError] = useState('');
   const [navOpen, setNavOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [isLightTheme, setIsLightTheme] = useState(false);
 
   const departments = [
@@ -121,9 +116,6 @@ export default function HomePage() {
   const visibleDoctors = showAllDoctors ? filteredDoctors : filteredDoctors.slice(0, 5);
   const extraDoctorsCount = Math.max(0, filteredDoctors.length - 5);
   const [activeSection, setActiveSection] = useState('home');
-  const profileName = (user.name || 'Admin').trim() || 'Admin';
-  const profileInitial = profileName.charAt(0).toUpperCase();
-
   useEffect(() => {
     const updateActive = () => {
       const hash = window.location.hash || '#home';
@@ -135,55 +127,7 @@ export default function HomePage() {
     return () => window.removeEventListener('hashchange', updateActive);
   }, []);
 
-  const handleAdminDashboardClick = () => {
-    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
-    if (typeof window !== 'undefined' && sessionStorage.getItem('admin_secret') === 'true' && storedUser?.role === 'admin') {
-      navigate('/admin/dashboard');
-    } else {
-      setAdminCodeInput('');
-      setAdminError('');
-      setShowAdminModal(true);
-    }
-    setProfileOpen(false);
-  };
 
-  const submitAdminCode = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/admin-code-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: adminCodeInput }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setAdminError(data.message || 'Invalid code');
-        return;
-      }
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      sessionStorage.setItem('admin_secret', 'true');
-      sessionStorage.setItem('admin_name', data.user.name);
-      window.dispatchEvent(new Event('adminSecretChanged'));
-      setShowAdminModal(false);
-      navigate('/admin/dashboard');
-    } catch (error) {
-      setAdminError('Unable to connect to the hospital server. Please try again.');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setProfileOpen(false);
-    navigate('/login');
-  };
-
-  const handleNotifications = () => {
-    setProfileOpen(false);
-    window.alert('No new notifications at this time.');
-  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 transition-colors duration-500 ease-out">
@@ -255,68 +199,6 @@ export default function HomePage() {
                 <span className="hidden sm:inline">{isLightTheme ? 'Light' : 'Dark'}</span>
               </button>
 
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleAdminDashboardClick}
-                  className="rounded-full border border-slate-700/80 bg-slate-900/80 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300 transition hover:border-cyan-400/40 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-300/50"
-                >
-                  ADMIN
-                </button>
-
-                {profileOpen && (
-                  <div className="absolute right-0 z-20 mt-3 w-64 overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/95 p-3 shadow-2xl shadow-slate-950/40 backdrop-blur-xl">
-                    <div className="space-y-1">
-                      <button
-                        type="button"
-                        onClick={handleAdminDashboardClick}
-                        className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-slate-800"
-                      >
-                        <span className="text-cyan-300">{NavIcons.home}</span>
-                        Dashboard
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProfileOpen(false);
-                          navigate('/admin/dashboard');
-                        }}
-                        className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-slate-800"
-                      >
-                        <span className="text-cyan-300">{NavIcons.profile}</span>
-                        Profile
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProfileOpen(false);
-                          navigate('/admin/settings');
-                        }}
-                        className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-slate-800"
-                      >
-                        <span className="text-cyan-300">{NavIcons.settings}</span>
-                        Settings
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleNotifications}
-                        className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-slate-800"
-                      >
-                        <span className="text-cyan-300">{NavIcons.bell}</span>
-                        Notifications
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm text-rose-300 transition hover:bg-slate-800"
-                      >
-                        <span className="text-rose-400">{NavIcons.logout}</span>
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -337,40 +219,6 @@ export default function HomePage() {
           </div>
         </div>
       </header>
-
-      {/* Admin code modal */}
-      {showAdminModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-            <h3 className="mb-2 text-lg font-semibold">Admin Access</h3>
-            <p className="mb-4 text-sm text-slate-400">Enter the admin access code to view the admin panel.</p>
-            <input
-              autoFocus
-              value={adminCodeInput}
-              onChange={(e) => setAdminCodeInput(e.target.value)}
-              className="mb-3 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100"
-              placeholder="Access code"
-              type="password"
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  submitAdminCode();
-                }
-              }}
-            />
-            {adminError && <div className="mb-2 text-sm text-rose-400">{adminError}</div>}
-            <div className="flex justify-end gap-3">
-              <button onClick={() => { setShowAdminModal(false); setAdminError(''); }} className="rounded-md border border-slate-700 bg-slate-800/60 px-3 py-1 text-sm">Cancel</button>
-              <button
-                onClick={submitAdminCode}
-                className="rounded-full bg-rose-600 px-4 py-1 text-sm font-medium text-white hover:bg-rose-500"
-              >
-                Enter
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Hero */}
       <section id="home" className="mx-auto max-w-6xl px-6 py-12">

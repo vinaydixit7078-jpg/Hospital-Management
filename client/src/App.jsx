@@ -1,10 +1,12 @@
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import HomePage from './HomePage';
 import ContactPage from './ContactPage';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { doctorData } from './data/doctors';
+import AdminLogin from './admin/AdminLogin';
+import { AuthProvider, useAuth } from './auth';
 import {
   AdminDashboardPage,
   AdminPatientsPage,
@@ -29,31 +31,6 @@ const getAuthHeaders = (token) => {
   return authToken ? { Authorization: `Bearer ${authToken}` } : {};
 };
 
-const AuthContext = createContext(null);
-
-const AuthProvider = ({ children }) => {
-  const [auth, setAuth] = useState(() => {
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    return { token, user };
-  });
-
-  const login = ({ token, user }) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    setAuth({ token, user });
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setAuth({ token: null, user: null });
-  };
-
-  return <AuthContext.Provider value={{ auth, login, logout }}>{children}</AuthContext.Provider>;
-};
-
-const useAuth = () => useContext(AuthContext);
 
 function DashboardLayout({ children, title, links }) {
   const location = useLocation();
@@ -1245,7 +1222,6 @@ function App() {
   const { auth } = useAuth();
   const token = auth?.token;
   const user = auth?.user || {};
-  const [secretAdmin, setSecretAdmin] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('admin_secret') === 'true');
 
   useEffect(() => {
     const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
@@ -1256,26 +1232,13 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    const handleAdminSecretChange = () => {
-      setSecretAdmin(typeof window !== 'undefined' && sessionStorage.getItem('admin_secret') === 'true');
-    };
-
-    window.addEventListener('storage', handleAdminSecretChange);
-    window.addEventListener('adminSecretChanged', handleAdminSecretChange);
-
-    return () => {
-      window.removeEventListener('storage', handleAdminSecretChange);
-      window.removeEventListener('adminSecretChanged', handleAdminSecretChange);
-    };
-  }, []);
-
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/patient-dashboard" element={token ? <PatientDashboard /> : <Navigate to="/login" />} />
         <Route path="/appointments" element={token ? <PatientDashboard /> : <Navigate to="/login" />} />
@@ -1285,18 +1248,18 @@ function App() {
         <Route path="/doctor-dashboard" element={token && user.role === 'doctor' ? <DoctorDashboard /> : <Navigate to="/login" />} />
         <Route path="/doctor" element={token && user.role === 'doctor' ? <DoctorDashboard /> : <Navigate to="/login" />} />
         <Route path="/doctor/history" element={token && user.role === 'doctor' ? <DoctorDashboard /> : <Navigate to="/login" />} />
-        <Route path="/admin/dashboard" element={(token && user.role === 'admin') || secretAdmin ? <AdminDashboardPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/patients" element={(token && user.role === 'admin') || secretAdmin ? <AdminPatientsPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/doctors" element={(token && user.role === 'admin') || secretAdmin ? <AdminDoctorsPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/appointments" element={(token && user.role === 'admin') || secretAdmin ? <AdminAppointmentsPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/departments" element={(token && user.role === 'admin') || secretAdmin ? <AdminDepartmentsPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/pharmacy" element={(token && user.role === 'admin') || secretAdmin ? <AdminPharmacyPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/laboratory" element={(token && user.role === 'admin') || secretAdmin ? <AdminLaboratoryPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/billing" element={(token && user.role === 'admin') || secretAdmin ? <AdminBillingPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/staff" element={(token && user.role === 'admin') || secretAdmin ? <AdminStaffPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/reports" element={(token && user.role === 'admin') || secretAdmin ? <AdminReportsPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/inventory" element={(token && user.role === 'admin') || secretAdmin ? <AdminInventoryPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/settings" element={(token && user.role === 'admin') || secretAdmin ? <AdminSettingsPage /> : <Navigate to="/login" />} />
+        <Route path="/admin/dashboard" element={token && user.role === 'admin' ? <AdminDashboardPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/patients" element={token && user.role === 'admin' ? <AdminPatientsPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/doctors" element={token && user.role === 'admin' ? <AdminDoctorsPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/appointments" element={token && user.role === 'admin' ? <AdminAppointmentsPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/departments" element={token && user.role === 'admin' ? <AdminDepartmentsPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/pharmacy" element={token && user.role === 'admin' ? <AdminPharmacyPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/laboratory" element={token && user.role === 'admin' ? <AdminLaboratoryPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/billing" element={token && user.role === 'admin' ? <AdminBillingPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/staff" element={token && user.role === 'admin' ? <AdminStaffPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/reports" element={token && user.role === 'admin' ? <AdminReportsPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/inventory" element={token && user.role === 'admin' ? <AdminInventoryPage /> : <Navigate to="/admin/login" />} />
+        <Route path="/admin/settings" element={token && user.role === 'admin' ? <AdminSettingsPage /> : <Navigate to="/admin/login" />} />
         <Route path="/admin-dashboard" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>

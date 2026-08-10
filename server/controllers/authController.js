@@ -158,7 +158,11 @@ const loginUser = async (req, res) => {
 
 const adminCodeLogin = (req, res) => {
   const { code } = req.body;
-  const adminCode = process.env.ADMIN_ACCESS_CODE || '7070';
+  const adminCode = process.env.ADMIN_ACCESS_CODE;
+
+  if (!adminCode) {
+    return res.status(500).json({ message: 'ADMIN_ACCESS_CODE is not configured on the server.' });
+  }
 
   if (!code || code !== adminCode) {
     return res.status(401).json({ message: 'Invalid admin access code.' });
