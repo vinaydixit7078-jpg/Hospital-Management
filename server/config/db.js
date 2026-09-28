@@ -10,11 +10,14 @@ const connectDB = async () => {
     const conn = await mongoose.connect(MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 3000,
+      connectTimeoutMS: 3000,
     });
     console.log(`MongoDB connected: ${conn.connection.host}`);
+    return conn;
   } catch (error) {
-    console.error('MongoDB connection error:', error.message);
-    process.exit(1);
+    console.warn('MongoDB connection unavailable, continuing with fallback data.', error.message);
+    return null;
   }
 };
 

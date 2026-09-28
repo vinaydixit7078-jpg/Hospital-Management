@@ -2,8 +2,9 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${BACKEND_URL}/api`,
 });
 
 const getAuthHeaders = () => {
@@ -70,8 +71,8 @@ function Breadcrumbs() {
 function AdminShell({ children, pageTitle }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="border-b border-slate-800 bg-slate-900/95 px-4 py-4 backdrop-blur md:px-6">
+    <div className="min-h-screen" style={{ background: 'var(--bg-base)', color: 'var(--text-heading)' }}>
+      <div className="border-b px-4 py-4 backdrop-blur md:px-6" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button
@@ -86,13 +87,13 @@ function AdminShell({ children, pageTitle }) {
             </div>
           </div>
           <div className="hidden items-center gap-4 md:flex">
-            <NavLink to="/" className="rounded-full border border-slate-800 bg-slate-900/80 px-4 py-2 text-sm text-slate-300 hover:border-cyan-500 hover:text-white">Switch Site</NavLink>
+            <NavLink to="/" className="rounded-full px-4 py-2 text-sm btn-outline">Switch Site</NavLink>
           </div>
         </div>
       </div>
 
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 lg:flex-row lg:items-start">
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} w-full rounded-3xl border border-slate-800 bg-slate-900/95 p-4 shadow-xl md:block md:w-80`}>
+        <aside className={`${sidebarOpen ? 'block' : 'hidden'} w-full rounded-3xl p-4 shadow-xl md:block md:w-80 card`}>
           <div className="mb-6 flex items-center justify-between md:hidden">
             <div className="text-sm font-semibold text-white">Navigation</div>
             <button className="text-slate-400" onClick={() => setSidebarOpen(false)}>✕</button>
@@ -115,7 +116,7 @@ function AdminShell({ children, pageTitle }) {
           </div>
         </aside>
 
-        <main className="w-full rounded-3xl border border-slate-800 bg-slate-900/95 p-6 shadow-xl">
+        <main className="w-full rounded-3xl p-6 shadow-xl card">
           <Breadcrumbs />
           {children}
         </main>

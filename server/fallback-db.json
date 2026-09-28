@@ -34,6 +34,27 @@
       "email": "vinaydixit7078@gmail.com",
       "password": "$2a$10$4lRr8hMLniJMCpIxUheb/OhDumIEsrfiX4Nl6h1oFVONfyQBYlj3G",
       "role": "patient"
+    },
+    {
+      "id": 6,
+      "name": "ram",
+      "email": "ram123@gmail.com",
+      "password": "$2a$10$eUkbjxfef48QpZgjf1p3fO/BmTMMBxf0jFx3Q2c/Pk0LgZ5xZ9WxW",
+      "role": "patient"
+    },
+    {
+      "id": 7,
+      "name": "Vansh Malik",
+      "email": "vansh123@gmail.com",
+      "password": "$2a$10$X0zMaYfXGkvFye6cjFmOj.I0YAaCW1GClyLF5KIBrZ2xzWSGUbHyW",
+      "role": "patient"
+    },
+    {
+      "id": 8,
+      "name": "Rajesh",
+      "email": "rajesh.rajaan@skit.ac.in",
+      "password": "$2a$10$dbA4M8MKdzqwbknoGHol7.dphqVaBnT0sk4LHP8I/68F6aCLx19bm",
+      "role": "patient"
     }
   ],
   "doctors": [],
@@ -65,6 +86,24 @@
     {
       "id": 5,
       "user_id": 5,
+      "gender": "Male",
+      "address": ""
+    },
+    {
+      "id": 6,
+      "user_id": 6,
+      "gender": "Male",
+      "address": ""
+    },
+    {
+      "id": 7,
+      "user_id": 7,
+      "gender": "Male",
+      "address": ""
+    },
+    {
+      "id": 8,
+      "user_id": 8,
       "gender": "Male",
       "address": ""
     }
@@ -150,6 +189,87 @@
       "time": "13:00",
       "status": "pending",
       "created_at": "2026-08-05T18:26:19.190Z"
+    },
+    {
+      "id": 10,
+      "patient_id": 7,
+      "doctor_id": 23,
+      "date": "2026-08-27",
+      "time": "09:00",
+      "status": "pending",
+      "created_at": "2026-08-18T05:23:25.427Z"
+    },
+    {
+      "id": 11,
+      "patient_id": 7,
+      "doctor_id": 23,
+      "date": "2026-08-27",
+      "time": "15:00",
+      "status": "pending",
+      "created_at": "2026-08-18T05:23:29.710Z"
+    },
+    {
+      "id": 12,
+      "patient_id": 7,
+      "doctor_id": 50,
+      "date": "2026-08-27",
+      "time": "09:00",
+      "status": "pending",
+      "created_at": "2026-08-24T11:46:37.990Z"
+    },
+    {
+      "id": 13,
+      "patient_id": 7,
+      "doctor_id": 20,
+      "date": "2026-08-20",
+      "time": "16:00",
+      "status": "pending",
+      "created_at": "2026-08-24T11:53:52.115Z"
+    },
+    {
+      "id": 14,
+      "patient_id": 7,
+      "doctor_id": 23,
+      "date": "2026-08-27",
+      "time": "14:00",
+      "status": "pending",
+      "created_at": "2026-08-24T11:55:28.116Z"
+    },
+    {
+      "id": 15,
+      "patient_id": 7,
+      "doctor_id": 23,
+      "date": "2026-08-27",
+      "time": "12:00",
+      "status": "pending",
+      "created_at": "2026-08-24T12:02:02.349Z"
+    },
+    {
+      "id": 16,
+      "patient_id": 7,
+      "doctor_id": 21,
+      "date": "2026-08-21",
+      "time": "18:00",
+      "status": "pending",
+      "created_at": "2026-08-24T12:24:13.175Z"
+    },
+    {
+      "id": 17,
+      "patient_id": 7,
+      "doctor_id": 1,
+      "date": "2026-08-26",
+      "time": "09:00",
+      "status": "pending",
+      "created_at": "2026-08-24T12:36:17.117Z"
+    },
+    {
+      "id": 18,
+      "patient_id": 8,
+      "doctor_id": 1,
+      "date": "2026-09-19",
+      "time": "15:00",
+      "status": "pending",
+      "created_at": "2026-09-19T06:24:20.692Z"
     }
   ],
   "medical_records": [],

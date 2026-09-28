@@ -5,6 +5,7 @@ const {
   createAppointment,
   getDoctorById,
   getAppointments,
+  updateAppointmentStatus: updateAppointmentStatusFromFallback,
 } = require('../fallbackDb');
 
 const isDbConnected = async () => {
@@ -14,6 +15,12 @@ const isDbConnected = async () => {
   } catch (error) {
     return false;
   }
+};
+
+const normalizeStatus = (status = '') => {
+  const lower = String(status).toLowerCase();
+  if (!lower) return 'Pending';
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
 };
 
 const bookAppointment = async (req, res) => {
@@ -167,18 +174,37 @@ const getDoctorAppointments = async (req, res) => {
   try {
     const { doctorId } = req.params;
 
-    const result = await pool.query(
-      `SELECT a.id, a.patient_id, a.doctor_id, a.date, a.time, a.status, a.created_at,
-              p.user_id AS patient_user_id, u.name AS patient_name
-       FROM appointments a
-       JOIN patients p ON p.id = a.patient_id
-       JOIN users u ON u.id = p.user_id
-       WHERE a.doctor_id = $1
-       ORDER BY a.date ASC, a.time ASC`,
-      [doctorId]
-    );
+    if (await isDbConnected()) {
+      const result = await pool.query(
+        `SELECT a.id, a.patient_id, a.doctor_id, a.date, a.time, a.status, a.created_at,
+                p.user_id AS patient_user_id, u.name AS patient_name
+         FROM appointments a
+         JOIN patients p ON p.id = a.patient_id
+         JOIN users u ON u.id = p.user_id
+         WHERE a.doctor_id = $1
+         ORDER BY a.date ASC, a.time ASC`,
+        [doctorId]
+      );
 
-    res.status(200).json(result.rows);
+      return res.status(200).json(result.rows);
+    }
+
+    const appointments = getAppointments({ doctorId });
+    const data = loadData();
+    const mapped = appointments
+      .map((appointment) => {
+        const patient = data.patients.find((p) => Number(p.id) === Number(appointment.patient_id));
+        const patientUser = patient ? data.users.find((u) => Number(u.id) === Number(patient.user_id)) : null;
+
+        return {
+          ...appointment,
+          patient_name: patientUser?.name || 'Unknown Patient',
+          status: normalizeStatus(appointment.status),
+        };
+      })
+      .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+
+    res.status(200).json(mapped);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error while fetching doctor schedule.' });
@@ -195,21 +221,33 @@ const updateAppointmentStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status.' });
     }
 
-    const result = await pool.query(
-      `UPDATE appointments
-       SET status = $1
-       WHERE id = $2
-       RETURNING *`,
-      [status, id]
-    );
+    if (await isDbConnected()) {
+      const result = await pool.query(
+        `UPDATE appointments
+         SET status = $1
+         WHERE id = $2
+         RETURNING *`,
+        [status, id]
+      );
 
-    if (result.rows.length === 0) {
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Appointment not found.' });
+      }
+
+      return res.status(200).json({
+        message: 'Appointment status updated successfully.',
+        appointment: result.rows[0],
+      });
+    }
+
+    const updated = updateAppointmentStatusFromFallback(id, status);
+    if (!updated) {
       return res.status(404).json({ message: 'Appointment not found.' });
     }
 
     res.status(200).json({
       message: 'Appointment status updated successfully.',
-      appointment: result.rows[0],
+      appointment: updated,
     });
   } catch (error) {
     console.error(error);

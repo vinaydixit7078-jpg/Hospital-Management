@@ -13,6 +13,8 @@ const router = express.Router();
 router.get('/', verifyToken, isAdmin, getAllAppointments);
 router.post('/', verifyToken, isPatient, bookAppointment);
 router.get('/patient/:patientId', verifyToken, isPatient, getPatientAppointments);
+router.get('/doctor/live/:doctorId', getDoctorAppointments);
+router.put('/doctor/live/:id/status', updateAppointmentStatus);
 router.get('/:doctorId', verifyToken, isDoctor, getDoctorAppointments);
 router.put('/:id/status', verifyToken, isDoctor, updateAppointmentStatus);
 

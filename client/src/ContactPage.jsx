@@ -109,7 +109,8 @@ const socials = [
   { name: 'YouTube', href: '#', icon: 'y' },
 ];
 
-const api = axios.create({ baseURL: 'http://localhost:5000/api' });
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const api = axios.create({ baseURL: `${BACKEND_URL}/api` });
 
 function FAQItem({ question, answer, isOpen, onClick }) {
   return (

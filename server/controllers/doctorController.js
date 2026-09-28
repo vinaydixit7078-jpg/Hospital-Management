@@ -3,6 +3,23 @@ const pool = require('../db');
 const { loadData, sampleDoctors } = require('../fallbackDb');
 
 const getDoctors = async (req, res) => {
+  const mapFallbackDoctors = () => {
+    const data = loadData();
+    const doctors = data.doctors && data.doctors.length ? data.doctors : sampleDoctors;
+    return doctors.map((doctor) => ({
+      id: doctor.id,
+      name: doctor.name,
+      email: doctor.email || `${doctor.name.toLowerCase().replace(/[^a-z]/g, '.')}@cityhospital.com`,
+      specialization: doctor.specialization,
+      qualification: doctor.qualification,
+      experience: doctor.experience,
+      availability: doctor.availability,
+      contact: doctor.contact,
+      consultation_fee: doctor.consultation_fee,
+      status: doctor.status,
+    }));
+  };
+
   try {
     const result = await pool.query(
       `SELECT d.id, u.name, u.email, d.specialization
@@ -11,24 +28,15 @@ const getDoctors = async (req, res) => {
        ORDER BY u.name ASC`
     );
 
+    if (result.rows.length === 0) {
+      return res.status(200).json(mapFallbackDoctors());
+    }
+
     res.status(200).json(result.rows);
   } catch (error) {
     console.warn('Doctor API falling back to local sample doctors:', error.message || error);
     try {
-      const data = loadData();
-      const doctors = data.doctors && data.doctors.length ? data.doctors : sampleDoctors;
-      const normalizedDoctors = doctors.map((doctor) => ({
-        id: doctor.id,
-        name: doctor.name,
-        email: doctor.email || `${doctor.name.toLowerCase().replace(/[^a-z]/g, '.')}@cityhospital.com`,
-        specialization: doctor.specialization,
-        qualification: doctor.qualification,
-        experience: doctor.experience,
-        availability: doctor.availability,
-        contact: doctor.contact,
-        consultation_fee: doctor.consultation_fee,
-        status: doctor.status,
-      }));
+      const normalizedDoctors = mapFallbackDoctors();
       res.status(200).json(normalizedDoctors);
     } catch (fallbackError) {
       console.error('Failed to load fallback doctors:', fallbackError);

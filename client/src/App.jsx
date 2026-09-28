@@ -1,11 +1,21 @@
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import HomePage from './HomePage';
 import ContactPage from './ContactPage';
-import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { doctorData } from './data/doctors';
 import AdminLogin from './admin/AdminLogin';
+import DoctorDashboard from './admin/DoctorDashboard';
+import DashboardLayout from './layout/DashboardLayout';
+import DoctorLayout from './doctor/DoctorLayout';
+import { diseaseDirectory } from './data/diseaseDirectory';
+// Lazy-load doctor panel pages to avoid blocking initial module evaluation
+const DoctorAppointments = React.lazy(() => import('./doctor/DoctorAppointments'));
+const DoctorLogin = React.lazy(() => import('./doctor/DoctorLogin'));
+const DoctorPanelDashboard = React.lazy(() => import('./doctor/DoctorPanelDashboard'));
+const DoctorPatients = React.lazy(() => import('./doctor/DoctorPatients'));
+const DoctorProfile = React.lazy(() => import('./doctor/DoctorProfile'));
 import { AuthProvider, useAuth } from './auth';
 import {
   AdminDashboardPage,
@@ -22,8 +32,9 @@ import {
   AdminSettingsPage,
 } from './admin/AdminPages';
 
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${BACKEND_URL}/api`,
 });
 
 const getAuthHeaders = (token) => {
@@ -31,48 +42,35 @@ const getAuthHeaders = (token) => {
   return authToken ? { Authorization: `Bearer ${authToken}` } : {};
 };
 
-
-function DashboardLayout({ children, title, links }) {
-  const location = useLocation();
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <nav className="sticky top-0 z-50 border-b border-slate-800/50 bg-slate-950/85 px-4 py-3 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.85)] backdrop-blur-xl sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-          <Link to="/" className="group inline-flex items-center gap-3 rounded-3xl border border-slate-700/70 bg-slate-900/80 px-4 py-2 shadow-lg shadow-slate-950/20 transition hover:border-cyan-400/40">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-600 font-bold text-white">H</span>
-            <span className="text-sm font-semibold text-slate-100">{title}</span>
-          </Link>
-          <div className="flex flex-wrap items-center gap-1 rounded-3xl border border-slate-800/70 bg-slate-900/50 p-1.5 text-sm">
-            <Link
-              to="/"
-              className="rounded-full px-4 py-2 font-medium text-slate-300 transition hover:bg-slate-900 hover:text-white"
-            >
-              Home
-            </Link>
-            {links.map((link) => {
-              const isActive = location.pathname === link.to;
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`rounded-full px-4 py-2 font-medium transition ${
-                    isActive
-                      ? 'bg-slate-100/10 text-cyan-200 shadow-lg shadow-cyan-500/10 ring-1 ring-cyan-400/15'
-                      : 'text-slate-300 hover:bg-slate-900 hover:text-white'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+class ErrorBoundary extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error){
+    return { error };
+  }
+  componentDidCatch(error, info){
+    console.error('Unhandled render error:', error, info);
+  }
+  render(){
+    if(this.state.error){
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 p-6">
+          <div className="max-w-2xl rounded-xl border border-rose-600/40 bg-slate-900 p-6">
+            <h2 className="text-xl font-semibold text-rose-400">Something went wrong</h2>
+            <pre className="mt-4 text-xs text-slate-300 whitespace-pre-wrap">{String(this.state.error)}</pre>
+            <div className="mt-4 text-sm text-slate-400">Check the browser console for details.</div>
           </div>
         </div>
-      </nav>
-      <main className="mx-auto max-w-6xl p-6">{children}</main>
-    </div>
-  );
+      );
+    }
+    return this.props.children;
+  }
 }
+
+
+// DashboardLayout moved to ./layout/DashboardLayout
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -229,6 +227,40 @@ function PatientDashboard() {
 
   const sampleDoctors = doctorData;
 
+  const normalizedDoctorSearch = doctorSearch.trim().toLowerCase();
+  const searchTokens = normalizedDoctorSearch.split(/\s+/).filter(Boolean);
+
+  const matchedDiseaseEntries = diseaseDirectory.filter((entry) =>
+    entry.terms.some((term) => {
+      const normalizedTerm = term.toLowerCase();
+      if (!normalizedDoctorSearch) return false;
+      if (normalizedTerm.includes(normalizedDoctorSearch) || normalizedDoctorSearch.includes(normalizedTerm)) return true;
+      return searchTokens.length > 0 && searchTokens.every((token) => normalizedTerm.includes(token));
+    })
+  );
+
+  const diseaseSuggestions = [...new Set(matchedDiseaseEntries.flatMap((entry) => entry.terms))]
+    .filter((term) => term.toLowerCase().includes(normalizedDoctorSearch) || normalizedDoctorSearch.includes(term.toLowerCase()))
+    .slice(0, 8);
+
+  const suggestedSpecializations = [...new Set(matchedDiseaseEntries.map((entry) => entry.specialization))];
+
+  const filteredDoctors = doctors
+    .filter((doctor) => {
+      if (!normalizedDoctorSearch) return true;
+
+      const byNameOrSpecialization =
+        doctor.name.toLowerCase().includes(normalizedDoctorSearch) ||
+        doctor.specialization.toLowerCase().includes(normalizedDoctorSearch);
+
+      const byDiseaseSuggestion = suggestedSpecializations.some(
+        (specialization) => doctor.specialization.toLowerCase() === specialization.toLowerCase()
+      );
+
+      return byNameOrSpecialization || byDiseaseSuggestion;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   const loadData = async () => {
     try {
       const docRes = await api.get('/doctors', { headers: getAuthHeaders() });
@@ -285,10 +317,36 @@ function PatientDashboard() {
               <label className="mb-2 block text-sm text-slate-300">Search doctors</label>
               <input
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 outline-none focus:border-cyan-500"
-                placeholder="Search by name or specialization"
+                placeholder="Search doctor by your Decease"
                 value={doctorSearch}
                 onChange={(e) => setDoctorSearch(e.target.value)}
+                list="disease-search-list"
               />
+              <datalist id="disease-search-list">
+                {diseaseDirectory.flatMap((entry) => entry.terms).map((term) => (
+                  <option key={term} value={term} />
+                ))}
+              </datalist>
+              {diseaseSuggestions.length > 0 && (
+                <div className="mt-2 text-xs text-slate-400">
+                  Suggested disease search:{' '}
+                  {diseaseSuggestions.map((disease) => (
+                    <button
+                      key={disease}
+                      type="button"
+                      className="mr-2 mt-1 rounded-full border border-slate-700 px-2 py-1 text-slate-300 hover:border-cyan-500 hover:text-cyan-300"
+                      onClick={() => setDoctorSearch(disease)}
+                    >
+                      {disease}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {suggestedSpecializations.length > 0 && (
+                <p className="mt-2 text-xs text-cyan-300">
+                  Suggested specialist: {suggestedSpecializations.join(', ')}
+                </p>
+              )}
             </div>
             <select
               className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2"
@@ -297,16 +355,7 @@ function PatientDashboard() {
             >
               <option value="">Select doctor</option>
               {Object.entries(
-                doctors
-                  .filter((doctor) => {
-                    const searchValue = doctorSearch.trim().toLowerCase();
-                    if (!searchValue) return true;
-                    return (
-                      doctor.name.toLowerCase().includes(searchValue) ||
-                      doctor.specialization.toLowerCase().includes(searchValue)
-                    );
-                  })
-                  .sort((a, b) => a.name.localeCompare(b.name))
+                filteredDoctors
                   .reduce((groups, doctor) => {
                     const key = doctor.specialization || 'General';
                     groups[key] = groups[key] || [];
@@ -438,7 +487,7 @@ function PrescriptionsPage() {
             <div key={item.id} className="rounded-lg border border-slate-800 bg-slate-800/70 p-4">
               <div className="flex items-center justify-between">
                 <p className="font-medium">{item.medicine_name}</p>
-                <a href={`http://localhost:5000/api/prescriptions/${item.id}/download`} className="text-sm text-cyan-400" target="_blank" rel="noreferrer">Download PDF</a>
+                <a href={`${BACKEND_URL}/api/prescriptions/${item.id}/download`} className="text-sm text-cyan-400" target="_blank" rel="noreferrer">Download PDF</a>
               </div>
               <p className="mt-1 text-sm text-slate-400">Dosage: {item.dosage}</p>
               <p className="mt-1 text-sm text-slate-400">Frequency: {item.frequency}</p>
@@ -607,7 +656,7 @@ function PaymentPage() {
   );
 }
 
-function DoctorDashboard() {
+function LegacyDoctorDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
   const [patientHistory, setPatientHistory] = useState([]);
@@ -1233,7 +1282,9 @@ function App() {
   }, []);
 
   return (
+    <ErrorBoundary>
     <BrowserRouter>
+      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">Loading...</div>}>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -1245,9 +1296,14 @@ function App() {
         <Route path="/records" element={token ? <RecordsPage /> : <Navigate to="/login" />} />
         <Route path="/prescriptions" element={token ? <PrescriptionsPage /> : <Navigate to="/login" />} />
         <Route path="/pay" element={token ? <PaymentPage /> : <Navigate to="/login" />} />
-        <Route path="/doctor-dashboard" element={token && user.role === 'doctor' ? <DoctorDashboard /> : <Navigate to="/login" />} />
-        <Route path="/doctor" element={token && user.role === 'doctor' ? <DoctorDashboard /> : <Navigate to="/login" />} />
-        <Route path="/doctor/history" element={token && user.role === 'doctor' ? <DoctorDashboard /> : <Navigate to="/login" />} />
+        <Route path="/doctor/login" element={<DoctorLogin />} />
+        <Route path="/doctor/*" element={<DoctorLayout />}>
+          <Route index element={<DoctorPanelDashboard />} />
+          <Route path="dashboard" element={<DoctorPanelDashboard />} />
+          <Route path="appointments" element={<DoctorAppointments />} />
+          <Route path="patients" element={<DoctorPatients />} />
+          <Route path="profile" element={<DoctorProfile />} />
+        </Route>
         <Route path="/admin/dashboard" element={token && user.role === 'admin' ? <AdminDashboardPage /> : <Navigate to="/admin/login" />} />
         <Route path="/admin/patients" element={token && user.role === 'admin' ? <AdminPatientsPage /> : <Navigate to="/admin/login" />} />
         <Route path="/admin/doctors" element={token && user.role === 'admin' ? <AdminDoctorsPage /> : <Navigate to="/admin/login" />} />
@@ -1262,8 +1318,11 @@ function App() {
         <Route path="/admin/settings" element={token && user.role === 'admin' ? <AdminSettingsPage /> : <Navigate to="/admin/login" />} />
         <Route path="/admin-dashboard" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="*" element={<div className="min-h-screen p-8 bg-slate-950 text-slate-100">App is running — no matching route.</div>} />
       </Routes>
+      </React.Suspense>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
